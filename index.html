@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ficha de Monstro</title>
+
+<style>
+/* ===============================
+   🔹 BASE
+=============================== */
+body {
+  background: #111;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+
+.ficha {
+  width: 360px; /* tamanho de telefone */
+  background: #1b1b1b;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.6);
+}
+
+/* ===============================
+   🔹 TOPO
+=============================== */
+.topo {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+}
+
+.imagem {
+  width: 120px;
+  height: 120px;
+  background: transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.imagem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info-topo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: 30px;
+}
+
+.info-topo .vd {
+  margin-bottom: 0;
+}
+
+.info-topo .vd + .editavel {
+  margin-top: -10px;   /* cola a área livre no VD */
+}
+
+
+.nome {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.vd {
+  font-size: 14px;
+}
+
+.editavel {
+  background: transparent;
+  padding: 2px 6px;
+  border-radius: 6px;
+  min-height: 20px;
+}
+
+
+/* ===============================
+   🔹 ABAS
+=============================== */
+.abas {
+  display: flex;
+  margin-top: 12px;
+  margin-bottom: 10px;
+}
+
+.aba {
+  flex: 1;
+  text-align: center;
+  padding: 6px;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 6px 6px 0 0;
+  font-size: 13px;
+}
+
+.aba.ativa {
+  background: #3a3a3a;
+  font-weight: bold;
+}
+
+.conteudo {
+  background: transparent;
+  padding: 10px;
+  border-radius: 0 0 8px 8px;
+
+  max-height: 420px;     /* 👈 ajuste ao seu gosto */
+  overflow-y: auto;      /* 👈 scroll interno */
+
+  /* Firefox */
+  scrollbar-width: none;
+
+  /* Internet Explorer / Edge antigo */
+  -ms-overflow-style: none;
+}
+
+/* Chrome, Edge, Safari */
+.conteudo::-webkit-scrollbar {
+  display: none;
+}
+
+
+
+/* ===============================
+   🔹 STATUS
+=============================== */
+.atributos {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: rgb(167, 39, 209);
+}
+
+.atributo span {
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.bloco-duplo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.bloco-duplo > div > h4 {
+  margin-bottom: 5px;   /* aproxima do campo editável */
+}
+
+.bloco-duplo > div > .editavel {
+  margin-top: -5px;    /* sobe o campo */
+}
+
+
+/* ===============================
+   🔹 LISTAS
+=============================== */
+.secao {
+  margin-top: 10px;
+}
+
+.secao h4 {
+  font-size: 13px;
+  margin-bottom: 4px;
+  opacity: 0.9;
+}
+
+/* ===============================
+   🔹 ESCONDER
+=============================== */
+.hidden {
+  display: none;
+}
+
+/* ===============================
+   🔹 BARRAS
+=============================== */
+
+.barras-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.bloco-barra {
+  position: relative;
+  width: 100%;
+}
+
+.bar-title {
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 6px;
+  margin-top: 25px;
+}
+
+.bar-container {
+  width: 100%;
+  height: 30px;
+  background-color: #191919;
+  border: 2px solid #fff;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animações de alerta */
+.bar-container.hp-warning {
+  animation: hp-pop-warning 1.6s ease-in-out infinite;
+}
+.bar-container.hp-critical {
+  animation: hp-pop-critical 0.9s ease-in-out infinite;
+}
+
+/* Barra base */
+.bar {
+  height: 100%;
+  width: 0;
+  transition: width 0.6s;
+}
+
+.bar.hp {
+  background-color: rgb(182, 36, 36);
+}
+
+.bar.alma {
+  background-color: rgb(45, 168, 255);
+}
+
+/* Excesso */
+.positive-bar {
+  background-color: orange;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  pointer-events: none;
+  transition: width 0.6s;
+}
+
+/* Input */
+.bar-input {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 90px;
+  border: none;
+  background: none;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  z-index: 2;
+  font-size: 14px;
+}
+
+/* Setas */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  font-size: 25px;
+}
+
+.arrow.left-single { left: 28px; }
+.arrow.right-single { right: 28px; }
+.arrow.left-double { left: 5px; }
+.arrow.right-double { right: 5px; }
+
+/* MORTO */
+.dead-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: none;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 3;
+  pointer-events: none;
+}
+
+
+/* ==============================
+   🔴 HP — PULSO NO CONTAINER
+============================== */
+
+/* 50% — pulso médio */
+.bar-container.hp-warning {
+  animation: hpContainerWarning 1.6s ease-in-out infinite;
+}
+
+/* 25% — pulso forte */
+.bar-container.hp-critical {
+  animation: hpContainerCritical 0.9s ease-in-out infinite;
+}
+
+@keyframes hpContainerWarning {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 170, 0, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(255, 170, 0, 0.9);
+    transform: scale(1.015);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 170, 0, 0.3);
+    transform: scale(1);
+  }
+}
+
+@keyframes hpContainerCritical {
+  0% {
+    box-shadow: 0 0 0 rgba(255, 0, 0, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(255, 0, 0, 1);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(255, 0, 0, 0.5);
+    transform: scale(1);
+  }
+}
+.bloco-duplo > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* centraliza horizontalmente */
+  text-align: center;
+}
+.bloco-duplo > div > .editavel {
+  margin-top: -4px;
+  font-size: 22px;
+  font-weight: bold;
+  padding-top: 2px;
+}
+
+/* HP normal */
+.bar.hp {
+  background-color: rgb(182, 36, 36);
+  transition: background-color 0.4s, width 0.6s;
+}
+
+/* HP abaixo de 50% */
+.bar.hp.hp-low {
+  background-color: rgb(120, 20, 20);
+}
+
+/* HP crítico (25% ou menos) */
+.bar.hp.hp-critical-color {
+  background-color: rgb(80, 10, 10);
+}
+.barra-divisor {
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.25);
+  margin: 12px 0;
+}
+/* ===== CARD ===== */
+.card-habilidade {
+  background: linear-gradient(180deg, #1f2023, #16171a);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  margin-bottom: 6px;
+}
+/* ===== TEXTO BRANCO NO CARD ===== */
+.card-habilidade {
+  color: #ffffff;
+}
+
+.card-habilidade .card-nome {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.card-habilidade .card-desc {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+
+.card-habilidade .badge {
+  color: #ffffff;
+}
+
+.card-habilidade .card-acao {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.card-habilidade .card-acao:hover {
+  color: #ffffff;
+}
+
+
+/* 🔴 CARD ATIVO (PD) */
+.card-habilidade.pd {
+  background: linear-gradient(
+    135deg,
+    #c23a3a 0%,
+    #6e1b1b 30%,
+    #191919 60%,
+    #191919 100%
+  );
+  border: 1px solid #c23a3a;
+}
+
+/* 🟢 CARD PASSIVA */
+.card-habilidade.passiva {
+  background: linear-gradient(
+    135deg,
+    #3ac27a 0%,
+    #1b6e45 30%,
+    #191919 60%,
+    #191919 100%
+  );
+  border: 1px solid #1fa88c;
+}
+
+/* topo */
+.card-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* nome */
+.card-nome {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* descrição */
+.card-desc {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* ===== BADGES ===== */
+.badge {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* PD - vermelho */
+.badge-pd {
+  background: linear-gradient(135deg, #6e1b1b, #c23a3a);
+  color: #fff;
+}
+
+/* PASSIVA - verde */
+.badge-passiva {
+  background: linear-gradient(135deg, #1b6e45, #3ac27a);
+  color: #fff;
+}
+
+/* ===== AÇÕES (EDITAR / EXCLUIR) ===== */
+.card-acoes {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card-habilidade:hover .card-acoes {
+  opacity: 1;
+}
+
+.card-acao {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+}
+
+.card-acao:hover {
+  color: #fff;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-habilidade {
+  background: #1c1d20;
+  border-radius: 10px;
+  padding: 15px;
+  width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-habilidade input,
+.modal-habilidade textarea {
+  background: #111;
+  border: 1px solid #333;
+  color: white;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.modal-habilidade textarea {
+  resize: none;
+  height: 80px;
+}
+
+.btn-salvar {
+  background: linear-gradient(135deg, #5a2d82, #8f3fd1);
+  border: none;
+  padding: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+/* badge no canto superior direito */
+.card-habilidade .badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+}
+
+/* ações no canto inferior direito */
+.card-acoes {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card-habilidade:hover .card-acoes {
+  opacity: 1;
+}
+#campo-habilidades,
+#campo-habilidades-ativo {
+  display: none !important;
+}
+
+
+/* 🟡 EVOLUÇÃO */
+.card-habilidade.evolucao {
+  background: linear-gradient(
+    135deg,
+    #d6b45a 0%,
+    #a3872f 25%,
+    #191919 75%
+  );
+  border: 1px solid #a3872f;
+}
+
+/* ⚪ RAÇA */
+.card-habilidade.raca {
+  background: linear-gradient(
+    135deg,
+    #bdbdbd 0%,
+    #7a7a7a 25%,
+    #191919 75%
+  );
+  border: 1px solid #7a7a7a;
+}
+.card-item {
+  background: linear-gradient(135deg, #3a3a3a 20%, #191919 80%);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  color: white;
+  margin-bottom: 6px;
+  border: 1px solid #7a7a7a ; /* 👈 ADICIONE ISTO */
+}
+
+.card-item.tesouro {
+  background: linear-gradient(135deg, #d4af37 20%, #191919 80%);
+}
+
+.item-acoes {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+}
+
+.card-item:hover .item-acoes {
+  opacity: 1;
+}
+.lista-habilidades:empty {
+  display: none;
+}
+.item-topo {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.item-espaco {
+  opacity: 0.8;
+}
+
+.item-info {
+  font-size: 0.9em;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.item-desc {
+  margin-top: 6px;
+  font-size: 0.95em;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+.item-desc[style*="display: block"] {
+  max-height: 500px; /* ou um valor grande suficiente */
+  opacity: 1;
+}
+
+.item-desc[style*="display: none"] {
+  max-height: 0;
+  opacity: 0;
+}
+#itens {
+  display: none;
+}
+.conteudo-aba {
+  display: none;         /* esconde todas por padrão */
+}
+
+.card-habilidade,
+.card-item {
+  cursor: grab;
+}
+
+.card-habilidade:active,
+.card-item:active {
+  cursor: grabbing;
+  z-index: 999;
+}
+#lista-itens,
+#lista-habilidades,
+#lista-habilidades-ativo {
+  position: relative;
+}
+.card-item:hover .card-acoes {
+  opacity: 1;
+}
+.item-municao {
+  cursor: pointer;
+}
+.btn-add-habilidade {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #2f2f2f, #1a1a1a);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.btn-add-habilidade:hover {
+  background: linear-gradient(135deg, #3a3a3a, #222);
+}
+
+.imagem-descricao {
+  width: 350px;
+  height: 100%;
+  margin: 0 auto 20px auto; /* centralizada */
+}
+
+.imagem-descricao img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* 👈 AQUI SIM */
+}
+
+
+</style>
+ <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3g9cW1262DtgjD-t55iNCM2yYQf6ctTg",
+      authDomain: "hp-bar-5337b.firebaseapp.com",
+      databaseURL: "https://hp-bar-5337b-default-rtdb.firebaseio.com",
+      projectId: "hp-bar-5337b",
+      storageBucket: "hp-bar-5337b.appspot.com",
+      messagingSenderId: "891062479752",
+      appId: "1:891062479752:web:a94ee1b9ba5ddbb826683d",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
+</head>
+
+<body>
+
+<div class="ficha">
+
+  <!-- TOPO -->
+  <div class="topo">
+    <div class="imagem" onclick="selecionarImagem()">
+  <img id="preview-imagem" alt="">
+  <input type="file" id="input-imagem" accept="image/*" hidden>
+</div>
+
+
+    <div class="info-topo">
+      <div class="nome editavel" contenteditable="true" spellcheck="false">Nome da Criatura</div>
+      <div class="vd editavel" contenteditable="true">VD:</div>
+      <div class="editavel" contenteditable="true">Área de texto livre</div>
+    </div>
+  </div>
+
+<!-- VIDA -->
+  <div class="bloco-barra">
+    <div class="bar-title">VIDA</div>
+    <div class="bar-container" id="hp-container">
+      <div class="positive-bar" id="hp-excesso"></div>
+      <div class="bar hp" id="hp-bar"></div>
+
+      <div class="arrow left-double" onclick="changeHP(-5)">«</div>
+      <div class="arrow left-single" onclick="changeHP(-1)">‹</div>
+      <div class="arrow right-single" onclick="changeHP(1)">›</div>
+      <div class="arrow right-double" onclick="changeHP(5)">»</div>
+
+      <input id="hp-input" class="bar-input" value="0/0"
+        oninput="updateHP(this.value)" />
+
+      <div class="dead-message" id="hp-dead">MORTO</div>
+    </div>
+  </div>
+  
+
+  <!-- ALMA -->
+  <div class="bloco-barra">
+    <div class="bar-title">ALMA</div>
+    <div class="bar-container">
+      <div class="positive-bar" id="alma-excesso"></div>
+      <div class="bar alma" id="alma-bar"></div>
+
+      <div class="arrow left-double" onclick="changeBar('alma', -5)">«</div>
+      <div class="arrow left-single" onclick="changeBar('alma', -1)">‹</div>
+      <div class="arrow right-single" onclick="changeBar('alma', 1)">›</div>
+      <div class="arrow right-double" onclick="changeBar('alma', 5)">»</div>
+
+      <input id="alma-input" class="bar-input" value="0/0"
+        oninput="updateBar('alma', this.value)" />
+    </div>
+
+    <div class="alma-particles"></div>
+  </div>
+  <div class="barra-divisor"></div>
+
+
+  <div class="barras-container"></div>
+
+  <!-- ABAS -->
+  <div class="abas">
+    <div class="aba ativa" onclick="trocarAba('status', this)">STATUS</div>
+<div class="aba" onclick="trocarAba('combate', this)">COMBATE</div>
+<div class="aba" onclick="trocarAba('descricao', this)">DESCRIÇÃO</div>
+
+  </div>
+
+  <!-- STATUS -->
+  <div class="conteudo" id="status">
+
+    <div class="atributos">
+      <div class="atributo">
+        <span>AGI</span>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+      <div class="atributo">
+        <span>FOR</span>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+      <div class="atributo">
+        <span>VIG</span>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+      <div class="atributo">
+        <span>PRE</span>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+      <div class="atributo">
+        <span>INT</span>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+    </div>
+
+    <div class="bloco-duplo">
+      <div>
+        <h4>Defesa</h4>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+      <div>
+        <h4>Deslocamento</h4>
+        <div class="editavel" contenteditable="true"></div>
+      </div>
+    </div>
+
+    <div class="secao">
+      <h4>PERÍCIAS</h4>
+      <div class="editavel" contenteditable="true"></div>
+    </div>
+
+    <div class="secao">
+      <h4>SENTIDOS</h4>
+      <div class="editavel" contenteditable="true"></div>
+    </div>
+
+    <div class="secao">
+      <h4>RESISTÊNCIAS</h4>
+      <div class="editavel" contenteditable="true"></div>
+    </div>
+
+    <div class="secao">
+      <h4>VULNERABILIDADES</h4>
+      <div class="editavel" contenteditable="true"></div>
+    </div>
+
+  </div>
+
+  <!-- COMBATE -->
+  <div class="conteudo hidden" id="combate">
+  <div class="editavel" contenteditable="true" id="combate-texto">
+  Presença Amedrontadora
+</div>
+
+  <!-- 🔹 BOTÃO DE ADICIONAR -->
+<button class="btn-add-habilidade" onclick="abrirModalNovaHabilidade()">
+  + ADICIONAR HABILIDADE
+</button>
+
+
+<!-- 🔹 LISTA DE HABILIDADES -->
+<div id="lista-habilidades" class="lista-habilidades"></div>
+<div id="lista-habilidades-ativo" class="lista-habilidades" style="display: none;"></div>
+
+<!-- 🔹 MODAL DE HABILIDADE -->
+<div id="modal-habilidade" class="modal-overlay" style="display: none;" onclick="fecharModalHabilidade()">
+  <div class="modal-habilidade" onclick="event.stopPropagation()">
+
+    <input id="hab-nome" placeholder="Nome da habilidade">
+    <textarea id="hab-desc" placeholder="Descrição"></textarea>
+    <input id="hab-pd" placeholder="Custo em PD (ex: 1PD)">
+
+    <label>
+      <input type="checkbox" id="hab-passiva"> Passiva
+    </label>
+
+    <label>
+      <input type="checkbox" id="hab-evolucao"> Divino
+    </label>
+
+    <label>
+      <input type="checkbox" id="hab-raca"> Raça/Arquétipo
+    </label>
+
+<button class="btn-salvar" type="button" onclick="salvarHabilidade()">SALVAR</button>
+
+  </div>
+</div> <!-- ✅ FECHOU O MODAL AQUI -->
+
+    
+  </div>
+
+  <!-- DESCRIÇÃO -->
+  <div class="conteudo hidden" id="descricao">
+  <!-- IMAGEM DA DESCRIÇÃO -->
+<div class="imagem imagem-descricao" onclick="selecionarImagemDescricao()">
+  <img id="preview-imagem-descricao" alt="">
+  <input type="file" id="input-imagem-descricao" accept="image/*" hidden>
+</div>
+
+    <div class="editavel" contenteditable="true" id="descricao-texto">
+      Descrição da criatura
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ==============================
+   🔹 IDENTIDADE DA FICHA
+============================== */
+const personagemId = new URLSearchParams(window.location.search).get("page");
+
+if (!personagemId) {
+  alert("ERRO: use ?page=nomeDaFicha na URL");
+  throw new Error("Página sem ?page=");
+}
+function textoParaLista(html) {
+  return html
+    .replace(/<div><br><\/div>/g, "\n")
+    .replace(/<div>/g, "\n")
+    .replace(/<\/div>/g, "")
+    .replace(/<br>/g, "\n")
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+}
+
+function listaParaTexto(lista) {
+  if (!Array.isArray(lista)) return "";
+  return lista.join("<br>");
+}
+
+/* ==============================
+   🔹 FICHA — SALVAR / CARREGAR
+============================== */
+function textoParaLista(texto) {
+  return texto
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+}
+
+function listaParaTexto(lista) {
+  if (!Array.isArray(lista)) return "";
+  return lista.join("\n");
+}
+
+
+function salvarFicha() {
+  const imgSrc = document.getElementById("preview-imagem").src || "";
+  const imgDescricao = document.getElementById("preview-imagem-descricao")?.src || "";
+
+
+  const nome = document.querySelector(".info-topo .nome").textContent;
+  const vd = document.querySelector(".info-topo .vd").textContent;
+  const livre = document.querySelectorAll(".info-topo .editavel")[2].textContent;
+
+  const atributosElems = document.querySelectorAll("#status .atributo .editavel");
+  const atributos = {
+    AGI: atributosElems[0].textContent,
+    FOR: atributosElems[1].textContent,
+    VIG: atributosElems[2].textContent,
+    PRE: atributosElems[3].textContent,
+    INT: atributosElems[4].textContent
+  };
+
+  const blocos = document.querySelectorAll(".bloco-duplo > div");
+  const defesa = blocos[0].querySelector(".editavel").textContent;
+  const deslocamento = blocos[1].querySelector(".editavel").textContent;
+
+  const secoes = document.querySelectorAll("#status .secao .editavel");
+
+  const pericias = textoParaLista(secoes[0].innerHTML);
+const sentidos = textoParaLista(secoes[1].innerHTML);
+const resistencias = textoParaLista(secoes[2].innerHTML);
+const vulnerabilidades = textoParaLista(secoes[3].innerHTML);
+  const combateTexto = document.getElementById("combate-texto")?.innerHTML || "";
+  const descricaoTexto =
+  document.getElementById("descricao-texto")?.innerHTML || "";
+
+
+  db.ref(`fichas/${personagemId}`).set({
+    imgSrc,
+    nome,
+    vd,
+    livre,
+    atributos,
+    defesa,
+    deslocamento,
+    pericias,
+    sentidos,
+    resistencias,
+    vulnerabilidades,
+    combateTexto,
+    descricaoTexto,
+    imgDescricao
+  });
+}
+
+
+function carregarFicha() {
+  db.ref(`fichas/${personagemId}`).get().then(snapshot => {
+    if (!snapshot.exists()) return;
+
+    const dados = snapshot.val();
+
+    if (dados.imgSrc) document.getElementById("preview-imagem").src = dados.imgSrc;
+    if (dados.imgDescricao) {
+  document.getElementById("preview-imagem-descricao").src = dados.imgDescricao;
+}
+
+    if (dados.nome) document.querySelector(".info-topo .nome").textContent = dados.nome;
+    if (dados.vd) document.querySelector(".info-topo .vd").textContent = dados.vd;
+    if (dados.livre)
+      document.querySelectorAll(".info-topo .editavel")[2].textContent = dados.livre;
+
+    const atributosElems = document.querySelectorAll("#status .atributo .editavel");
+    if (dados.atributos) {
+      atributosElems[0].textContent = dados.atributos.AGI || "";
+      atributosElems[1].textContent = dados.atributos.FOR || "";
+      atributosElems[2].textContent = dados.atributos.VIG || "";
+      atributosElems[3].textContent = dados.atributos.PRE || "";
+      atributosElems[4].textContent = dados.atributos.INT || "";
+    }
+
+    const blocos = document.querySelectorAll(".bloco-duplo > div");
+    if (dados.defesa) blocos[0].querySelector(".editavel").textContent = dados.defesa;
+    if (dados.deslocamento) blocos[1].querySelector(".editavel").textContent = dados.deslocamento;
+
+    const secoes = document.querySelectorAll("#status .secao .editavel");
+    secoes[0].innerHTML = listaParaTexto(dados.pericias);
+secoes[1].innerHTML = listaParaTexto(dados.sentidos);
+secoes[2].innerHTML = listaParaTexto(dados.resistencias);
+secoes[3].innerHTML = listaParaTexto(dados.vulnerabilidades);
+
+    if (dados.combateTexto) {
+  document.getElementById("combate-texto").innerHTML = dados.combateTexto;
+}
+if (dados.descricaoTexto) {
+  document.getElementById("descricao-texto").innerHTML = dados.descricaoTexto;
+}
+  });
+}
+
+
+/* ==============================
+   🔹 BARRAS (HP / ALMA)
+============================== */
+function carregarBarras() {
+  ['hp', 'alma'].forEach(tipo => {
+    db.ref(`barras/${personagemId}/${tipo}`).get().then(snapshot => {
+      if (!snapshot.exists()) return;
+      const input = document.getElementById(`${tipo}-input`);
+      if (!input) return;
+      input.value = snapshot.val();
+      tipo === "hp" ? updateHP(input.value) : updateBar(tipo, input.value);
+    });
+  });
+}
+
+const almaInput = document.getElementById("alma-input");
+if (almaInput) {
+  almaInput.addEventListener("input", () => {
+    updateBar("alma", almaInput.value);
+    salvarBar("alma", almaInput.value);
+  });
+}
+
+const hpInput = document.getElementById("hp-input");
+if (hpInput) {
+  hpInput.addEventListener("input", () => {
+    updateHP(hpInput.value);
+    salvarBar("hp", hpInput.value);
+  });
+}
+
+function updateHP(value, prefix = "hp") {
+  const match = value.match(/^(\d+)\s*\/\s*(\d+)(?:\s*\((\d+)\))?$/);
+  if (!match) return;
+
+  let current = parseInt(match[1]);
+  const max = parseInt(match[2]);
+  const extra = parseInt(match[3]) || 0;
+
+  const bar = document.getElementById(`${prefix}-bar`);
+  const excesso = document.getElementById(`${prefix}-excesso`);
+  const input = document.getElementById(`${prefix}-input`);
+  const dead = document.getElementById(`${prefix}-dead`);
+  const container = document.getElementById(`${prefix}-container`);
+
+  if (!bar || max <= 0) return;
+
+  current = Math.max(0, current);
+  const perc = (current / max) * 100;
+
+  bar.style.width = perc + "%";
+
+  let excPerc = 0;
+  if (current > max) excPerc = ((current - max) / max) * 100;
+  if (extra > 0) excPerc += (extra / max) * 100;
+  if (excesso) excesso.style.width = Math.min(excPerc, 100) + "%";
+
+  container.classList.remove("hp-warning", "hp-critical");
+  bar.classList.remove("hp-low", "hp-critical-color");
+
+  if (current === 0) {
+    if (dead) dead.style.display = "block";
+    if (input) input.style.opacity = "0";
+  } else {
+    if (dead) dead.style.display = "none";
+    if (input) input.style.opacity = "1";
+
+    if (perc <= 25) {
+      container.classList.add("hp-critical");
+      bar.classList.add("hp-critical-color");
+    } else if (perc <= 50) {
+      container.classList.add("hp-warning");
+      bar.classList.add("hp-low");
+    }
+  }
+}
+
+function updateBar(tipo, value) {
+  const match = value.match(/^(\d+)\s*\/\s*(\d+)(?:\s*\((\d+)\))?$/);
+  if (!match) return;
+
+  let current = parseInt(match[1]);
+  const max = parseInt(match[2]);
+  const extra = parseInt(match[3]) || 0;
+
+  const bar = document.getElementById(`${tipo}-bar`);
+  const excesso = document.getElementById(`${tipo}-excesso`);
+  if (!bar || max <= 0) return;
+
+  bar.style.width = Math.min(100, (current / max) * 100) + "%";
+
+  let excessoPerc = 0;
+  if (current > max) excessoPerc = ((current - max) / max) * 100;
+  if (extra > 0) excessoPerc += (extra / max) * 100;
+  excesso.style.width = Math.min(excessoPerc, 100) + "%";
+}
+function changeHP(amount) {
+  const input = document.getElementById("hp-input");
+  if (!input) return;
+
+  const match = input.value.match(/^(\d+)\s*\/\s*(\d+)(?:\s*\((\d+)\))?$/);
+  if (!match) return;
+
+  let atual = parseInt(match[1]);
+  const max = parseInt(match[2]);
+  const extra = match[3] ? ` (${match[3]})` : "";
+
+  atual = Math.max(0, atual + amount);
+
+  input.value = `${atual}/${max}${extra}`;
+  updateHP(input.value);
+  salvarBar("hp", input.value);
+}
+function changeBar(tipo, amount) {
+  const input = document.getElementById(`${tipo}-input`);
+  if (!input) return;
+
+  const match = input.value.match(/^(\d+)\s*\/\s*(\d+)(?:\s*\((\d+)\))?$/);
+  if (!match) return;
+
+  let atual = parseInt(match[1]);
+  const max = parseInt(match[2]);
+  const extra = match[3] ? ` (${match[3]})` : "";
+
+  atual = Math.max(0, atual + amount);
+
+  input.value = `${atual}/${max}${extra}`;
+  updateBar(tipo, input.value);
+  salvarBar(tipo, input.value);
+}
+function salvarBar(tipo, valor) {
+  db.ref(`barras/${personagemId}/${tipo}`).set(valor);
+}
+
+
+/* ==============================
+   🔹 ABAS
+============================== */
+function trocarAba(id, el) {
+  document.querySelectorAll('.conteudo').forEach(c => c.classList.add('hidden'));
+  document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+
+  document.getElementById(id).classList.remove('hidden');
+  el.classList.add('ativa');
+}
+
+/* ==============================
+   🔹 IMAGEM
+============================== */
+function selecionarImagem() {
+  const input = document.getElementById("input-imagem");
+  input.click();
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById("preview-imagem").src = reader.result;
+      salvarFicha();
+    };
+    reader.readAsDataURL(file);
+  };
+}
+function selecionarImagemDescricao() {
+  const input = document.getElementById("input-imagem-descricao");
+  input.click();
+
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById("preview-imagem-descricao").src = reader.result;
+      salvarFicha();
+    };
+    reader.readAsDataURL(file);
+  };
+}
+
+
+/* ==============================
+   🔹 DRAG & DROP
+============================== */
+function ativarDragNoCard(card, container) {
+  card.draggable = true;
+
+  card.addEventListener("dragstart", () => card.classList.add("arrastando"));
+  card.addEventListener("dragover", e => e.preventDefault());
+  card.addEventListener("drop", () => {
+    const arrastando = container.querySelector(".arrastando");
+    if (!arrastando || arrastando === card) return;
+    container.insertBefore(arrastando, card);
+  });
+
+  card.addEventListener("dragend", () => {
+    card.classList.remove("arrastando");
+
+    if (card.classList.contains("card-habilidade")) {
+      const tipo = container.id === "lista-habilidades-ativo" ? "ativo" : "normal";
+      salvarOrdemHabilidades(container, tipo);
+    }
+  });
+}
+
+/* ==============================
+   🔹 MODAL HABILIDADES
+============================== */
+function toggleDescricao(botao) {
+  // Encontra o card pai
+  const card = botao.closest('.card-item');
+  if (!card) return;
+
+  // Encontra a descrição dentro do card
+  const desc = card.querySelector('.item-desc');
+  if (!desc) return;
+
+  // Alterna entre mostrar/esconder
+  if (desc.style.display === 'none') {
+    desc.style.display = 'block';
+    botao.textContent = '▲'; // seta para cima
+  } else {
+    desc.style.display = 'none';
+    botao.textContent = '▼'; // seta para baixo
+  }
+}
+function ativarDragNoCard(card, container) {
+  card.draggable = true;
+
+  card.addEventListener("dragstart", () => {
+    card.classList.add("arrastando");
+  });
+
+  card.addEventListener("dragover", e => e.preventDefault());
+
+  card.addEventListener("drop", () => {
+    const arrastando = container.querySelector(".arrastando");
+    if (!arrastando || arrastando === card) return;
+    container.insertBefore(arrastando, card);
+  });
+
+  card.addEventListener("dragend", () => {
+    card.classList.remove("arrastando");
+
+    // 🔹 INVENTÁRIO
+    if (card.classList.contains("card-item")) {
+      const ordem = [...container.children].map(c => c.dataset.id);
+      itensInventario = ordem
+        .map(id => itensInventario.find(i => i.id === id))
+        .filter(Boolean);
+      salvarInventarioFirebase();
+    }
+
+    // 🔹 HABILIDADES
+    if (card.classList.contains("card-habilidade")) {
+      const tipo = container.id === "lista-habilidades-ativo" ? "ativo" : "normal";
+      salvarOrdemHabilidades(container, tipo);
+    }
+  });
+}
+function aplicarOrdem(container, ordem) {
+  ordem.forEach(id => {
+    const card = container.querySelector(`[data-id="${id}"]`);
+    if (card) container.appendChild(card);
+  });
+}
+function salvarOrdemHabilidades(container, tipo) {
+  const ordem = [...container.children].map(c => c.dataset.id);
+  db.ref(`habilidades/${personagemId}/ordem/${tipo}`).set(ordem);
+}
+/* ===============================
+   CONTROLE DE EDIÇÃO
+================================ */
+let cardEmEdicao = null;
+
+/* ===============================
+   ABRIR / FECHAR MODAL
+================================ */
+function abrirModalHabilidade() {
+  document.getElementById('modal-habilidade').style.display = 'flex';
+}
+
+function fecharModalHabilidade() {
+  document.getElementById('modal-habilidade').style.display = 'none';
+}
+
+/* ===============================
+   LIMPAR MODAL
+================================ */
+function limparModalHabilidade() {
+  document.getElementById('hab-nome').value = '';
+  document.getElementById('hab-desc').value = '';
+  document.getElementById('hab-pd').value = '';
+  document.getElementById('hab-passiva').checked = false;
+  document.getElementById('hab-evolucao').checked = false;
+  document.getElementById('hab-raca').checked = false;
+}
+
+/* ===============================
+   NOVA HABILIDADE
+================================ */
+function abrirModalNovaHabilidade() {
+  cardEmEdicao = null;
+  limparModalHabilidade();
+  abrirModalHabilidade();
+}
+
+/* ===============================
+   EDITAR HABILIDADE
+================================ */
+function editarHabilidade(botao) {
+  cardEmEdicao = botao.closest('.card-habilidade');
+
+  document.getElementById('hab-nome').value =
+    cardEmEdicao.querySelector('.card-nome').innerText;
+
+  document.getElementById('hab-desc').value =
+    cardEmEdicao.querySelector('.card-desc').innerText;
+
+  const isPassiva = cardEmEdicao.classList.contains('passiva');
+  document.getElementById('hab-passiva').checked = isPassiva;
+
+  const badge = cardEmEdicao.querySelector('.badge');
+  document.getElementById('hab-pd').value =
+    isPassiva ? '' : badge.innerText;
+
+  abrirModalHabilidade();
+}
+
+/* ===============================
+   SALVAR HABILIDADE
+================================ */
+function salvarHabilidade() {
+  const nome = document.getElementById("hab-nome").value.trim();
+  const desc = document.getElementById("hab-desc").value.trim();
+  const pd = document.getElementById("hab-pd").value.trim();
+  const passiva = document.getElementById("hab-passiva").checked;
+  const evolucao = document.getElementById('hab-evolucao').checked;
+  const raca = document.getElementById('hab-raca').checked;
+
+
+  if (!nome) return;
+
+  if (cardEmEdicao) {
+    // 🔄 edição
+    cardEmEdicao.querySelector(".card-nome").innerText = nome;
+    cardEmEdicao.querySelector(".card-desc").innerText = desc;
+
+cardEmEdicao.classList.remove("passiva", "pd", "evolucao", "raca");
+
+if (passiva) cardEmEdicao.classList.add("passiva");
+else cardEmEdicao.classList.add("pd");
+
+if (evolucao) {
+  cardEmEdicao.classList.add("evolucao");
+} else if (raca) {
+  cardEmEdicao.classList.add("raca");
+}
+
+
+    const badge = cardEmEdicao.querySelector(".badge");
+    badge.className = `badge ${passiva ? "badge-passiva" : "badge-pd"}`;
+    badge.innerText = passiva ? "PASSIVA" : (pd || "PD");
+  } else {
+    // ➕ nova
+   criarCardHabilidade({ nome, desc, passiva, pd, evolucao, raca });
+
+  }
+
+  salvarHabilidadesFirebase();
+  fecharModalHabilidade();
+  limparModalHabilidade();
+  cardEmEdicao = null;
+}
+
+
+/* ===============================
+   EXCLUIR HABILIDADE
+================================ */
+function excluirHabilidade(botao) {
+  const card = botao.closest(".card-habilidade");
+  card.remove();
+  salvarHabilidadesFirebase();
+}
+
+
+
+/* ===============================
+   🔹 HABILIDADES — FIREBASE
+================================ */
+function salvarHabilidadesFirebase() {
+  const salvarLista = (listaId, caminho) => {
+    const lista = document.getElementById(listaId);
+    const habilidades = {};
+    lista.querySelectorAll(".card-habilidade").forEach(card => {
+      const id = card.dataset.id;
+habilidades[id] = {
+  nome: card.querySelector(".card-nome").innerText,
+  desc: card.querySelector(".card-desc").innerHTML,
+  passiva: card.classList.contains("passiva"),
+  pd: card.classList.contains("passiva") ? "" : card.querySelector(".badge").innerText,
+  evolucao: card.classList.contains("evolucao"),
+  raca: card.classList.contains("raca")
+};
+
+    });
+    db.ref(`habilidades/${personagemId}/${caminho}`).set(habilidades);
+  }
+
+  salvarLista("lista-habilidades", "normal");
+  salvarLista("lista-habilidades-ativo", "ativo");
+}
+
+
+
+let habilidadesCarregadas = false;
+
+function carregarHabilidadesFirebase() {
+  if (habilidadesCarregadas) return;
+  habilidadesCarregadas = true;
+
+  const listaNormal = document.getElementById("lista-habilidades");
+  const listaAtivo = document.getElementById("lista-habilidades-ativo");
+
+  listaNormal.innerHTML = "";
+  listaAtivo.innerHTML = "";
+
+  const carregarLista = (caminho, lista) => {
+  db.ref(`habilidades/${personagemId}/${caminho}`).once("value", snap => {
+    if (!snap.exists()) return;
+
+    Object.entries(snap.val()).forEach(([id, hab]) => {
+      criarCardHabilidade(hab, id, lista.id);
+    });
+
+    // ⬇️ aplica ordem salva
+    db.ref(`habilidades/${personagemId}/ordem/${caminho}`)
+      .once("value", snapOrd => {
+        if (snapOrd.exists()) {
+          aplicarOrdem(lista, snapOrd.val());
+        }
+      });
+  });
+};
+
+
+  carregarLista("normal", listaNormal);
+  carregarLista("ativo", listaAtivo);
+}
+
+function toggleDescricao(botao) {
+  const card = botao.closest(".card-habilidade");
+  if (!card) return;
+
+  const desc = card.querySelector(".card-desc");
+  if (!desc) return;
+
+  if (desc.style.display === "none" || desc.style.display === "") {
+    desc.style.display = "block";
+    botao.textContent = "▲";
+  } else {
+    desc.style.display = "none";
+    botao.textContent = "▼";
+  }
+}
+
+
+function criarCardHabilidade(dados, id = null, destinoId = null) {
+  const card = document.createElement("div");
+  card.className = "card-habilidade";
+
+  // tipo base
+  if (dados.passiva) card.classList.add("passiva");
+  else card.classList.add("pd");
+
+  // prioridade visual
+  if (dados.evolucao) {
+    card.classList.add("evolucao");
+  } else if (dados.raca) {
+    card.classList.add("raca");
+  }
+
+  const habilidadeId = id || Date.now().toString();
+  card.dataset.id = habilidadeId;
+
+
+  // Limpa o card
+card.innerHTML = "";
+
+// Container do topo (seta + nome + badge)
+const cardTopo = document.createElement("div");
+cardTopo.className = "card-topo";
+cardTopo.style.display = "flex";
+cardTopo.style.justifyContent = "space-between"; 
+cardTopo.style.alignItems = "center";
+cardTopo.style.gap = "8px";
+
+// Container esquerda: seta + nome
+const esquerda = document.createElement("div");
+esquerda.style.display = "flex";
+esquerda.style.alignItems = "center";
+esquerda.style.gap = "6px";
+
+// Botão de toggle (seta)
+const toggleBtn = document.createElement("button");
+toggleBtn.className = "toggle-desc";
+toggleBtn.textContent = "▼"; // ou use toggleBtn.innerHTML = '<img src="seta.png">';
+toggleBtn.style.cursor = "pointer";
+toggleBtn.style.background = "transparent"; // fundo transparente
+toggleBtn.style.border = "none";           // remove borda
+toggleBtn.style.padding = "0";             // remove padding
+toggleBtn.style.outline = "none";          // remove outline ao clicar
+toggleBtn.style.color = "white";  // seta branca
+
+// Nome
+const cardNome = document.createElement("span");
+cardNome.className = "card-nome";
+cardNome.textContent = dados.nome;
+
+// Adiciona seta e nome no container da esquerda
+esquerda.appendChild(toggleBtn);
+esquerda.appendChild(cardNome);
+
+// Badge (à direita)
+const badge = document.createElement("span");
+badge.className = "badge " + (dados.passiva ? "badge-passiva" : "badge-pd");
+badge.textContent = dados.passiva ? "PASSIVA" : (dados.pd || "PD");
+
+// Adiciona esquerda + badge no topo
+cardTopo.appendChild(esquerda);
+cardTopo.appendChild(badge);
+
+// Linha branca acima da descrição
+const linha = document.createElement("div");
+linha.style.height = "1px";
+linha.style.backgroundColor = "white";
+linha.style.margin = "6px 0";
+linha.style.width = "100%";
+linha.style.display = "none"; // começa escondida junto com a descrição
+
+// Descrição
+const cardDesc = document.createElement("div");
+cardDesc.className = "card-desc";
+cardDesc.style.display = "none";
+cardDesc.innerHTML = dados.desc;
+
+// Função de toggle
+toggleBtn.onclick = function() {
+  if (cardDesc.style.display === "none") {
+    cardDesc.style.display = "block";
+    linha.style.display = "block"; // mostra a linha junto
+    toggleBtn.textContent = "▲";
+  } else {
+    cardDesc.style.display = "none";
+    linha.style.display = "none"; // esconde a linha junto
+    toggleBtn.textContent = "▼";
+  }
+};
+
+// Adiciona topo, linha e descrição no card
+card.appendChild(cardTopo);
+card.appendChild(linha);
+card.appendChild(cardDesc);
+
+// Ações
+const cardAcoes = document.createElement("div");
+cardAcoes.className = "card-acoes";
+
+const btnEditar = document.createElement("button");
+btnEditar.className = "card-acao";
+btnEditar.textContent = "✎";
+btnEditar.onclick = function() { editarHabilidade(this); };
+
+const btnExcluir = document.createElement("button");
+btnExcluir.className = "card-acao";
+btnExcluir.textContent = "🗑";
+btnExcluir.onclick = function() { excluirHabilidade(this); };
+
+cardAcoes.appendChild(btnEditar);
+cardAcoes.appendChild(btnExcluir);
+card.appendChild(cardAcoes);
+
+  // Define destino correto
+  const destino = destinoId
+  ? document.getElementById(destinoId)
+  : document.getElementById("lista-habilidades");
+
+if (!destino) return;
+
+destino.appendChild(card);
+ativarDragNoCard(card, destino);
+}
+document.addEventListener("DOMContentLoaded", () => {
+  carregarFicha();
+  carregarHabilidadesFirebase();
+});
+
+document.addEventListener("input", () => {
+  salvarFicha();
+});
+
+
+/* ==============================
+   🔹 INICIAR
+============================== */
+window.addEventListener("load", () => {
+  carregarFicha();
+  carregarBarras();
+  document.querySelectorAll(".editavel").forEach(el => {
+    el.addEventListener("input", salvarFicha);
+  });
+});
+
+</script>
