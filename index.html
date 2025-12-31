@@ -936,6 +936,10 @@ if (!personagemId) {
   alert("ERRO: use ?page=nomeDaFicha na URL");
   throw new Error("Página sem ?page=");
 }
+
+let carregandoFicha = false;
+let salvarTimer = null;
+
 function textoParaLista(html) {
   return html
     .replace(/<div><br><\/div>/g, "\n")
@@ -969,6 +973,10 @@ function listaParaTexto(lista) {
 
 
 function salvarFicha() {
+  if (carregandoFicha) return;
+
+  clearTimeout(salvarTimer);
+  salvarTimer = setTimeout(() => {
   const imgSrc = document.getElementById("preview-imagem").src || "";
   const imgDescricao = document.getElementById("preview-imagem-descricao")?.src || "";
 
@@ -1017,12 +1025,15 @@ const vulnerabilidades = textoParaLista(secoes[3].innerHTML);
     descricaoTexto,
     imgDescricao
   });
+  }, 10);
 }
 
 
 function carregarFicha() {
+  carregandoFicha = true;
+
   db.ref(`fichas/${personagemId}`).get().then(snapshot => {
-    if (!snapshot.exists()) return;
+
 
     const dados = snapshot.val();
 
@@ -1061,6 +1072,7 @@ secoes[3].innerHTML = listaParaTexto(dados.vulnerabilidades);
 if (dados.descricaoTexto) {
   document.getElementById("descricao-texto").innerHTML = dados.descricaoTexto;
 }
+    carregandoFicha = false;
   });
 }
 
@@ -1662,9 +1674,7 @@ document.addEventListener("DOMContentLoaded", () => {
   carregarHabilidadesFirebase();
 });
 
-document.addEventListener("input", () => {
-  salvarFicha();
-});
+
 
 
 /* ==============================
@@ -1679,5 +1689,4 @@ window.addEventListener("load", () => {
 });
 
 </script>
-
 
