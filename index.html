@@ -939,6 +939,8 @@ if (!personagemId) {
 
 let carregandoFicha = false;
 let salvarTimer = null;
+let imgSrc = "";
+let imgDescricao = "";
 
 function textoParaLista(html) {
   return html
@@ -959,75 +961,102 @@ function listaParaTexto(lista) {
 /* ==============================
    🔹 FICHA — SALVAR / CARREGAR
 ============================== */
-function textoParaLista(texto) {
-  return texto
-    .split("\n")
-    .map(l => l.trim())
-    .filter(l => l.length > 0);
-}
 
-function listaParaTexto(lista) {
-  if (!Array.isArray(lista)) return "";
-  return lista.join("\n");
-}
-
-
-function salvarFicha() {
+let topoTimer;
+function salvarTopo() {
   if (carregandoFicha) return;
 
-  clearTimeout(salvarTimer);
-  salvarTimer = setTimeout(() => {
-  const imgSrc = document.getElementById("preview-imagem").src || "";
-  const imgDescricao = document.getElementById("preview-imagem-descricao")?.src || "";
-
-
-  const nome = document.querySelector(".info-topo .nome").textContent;
-  const vd = document.querySelector(".info-topo .vd").textContent;
-  const livre = document.querySelectorAll(".info-topo .editavel")[2].textContent;
-
-  const atributosElems = document.querySelectorAll("#status .atributo .editavel");
-  const atributos = {
-    AGI: atributosElems[0].textContent,
-    FOR: atributosElems[1].textContent,
-    VIG: atributosElems[2].textContent,
-    PRE: atributosElems[3].textContent,
-    INT: atributosElems[4].textContent
-  };
-
-  const blocos = document.querySelectorAll(".bloco-duplo > div");
-  const defesa = blocos[0].querySelector(".editavel").textContent;
-  const deslocamento = blocos[1].querySelector(".editavel").textContent;
-
-  const secoes = document.querySelectorAll("#status .secao .editavel");
-
-  const pericias = textoParaLista(secoes[0].innerHTML);
-const sentidos = textoParaLista(secoes[1].innerHTML);
-const resistencias = textoParaLista(secoes[2].innerHTML);
-const vulnerabilidades = textoParaLista(secoes[3].innerHTML);
-  const combateTexto = document.getElementById("combate-texto")?.innerHTML || "";
-  const descricaoTexto =
-  document.getElementById("descricao-texto")?.innerHTML || "";
-
-
-  db.ref(`fichas/${personagemId}`).set({
-    imgSrc,
-    nome,
-    vd,
-    livre,
-    atributos,
-    defesa,
-    deslocamento,
-    pericias,
-    sentidos,
-    resistencias,
-    vulnerabilidades,
-    combateTexto,
-    descricaoTexto,
-    imgDescricao
-  });
-  }, 10);
+  clearTimeout(topoTimer);
+  topoTimer = setTimeout(() => {
+    db.ref(`fichas/${personagemId}/topo`).update({
+      nome: document.querySelector(".info-topo .nome").textContent,
+      vd: document.querySelector(".info-topo .vd").textContent,
+      livre: document.querySelectorAll(".info-topo .editavel")[2].textContent
+    });
+  }, 300);
 }
 
+let statusTimer;
+function salvarStatus() {
+  if (carregandoFicha) return;
+
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => {
+    const a = document.querySelectorAll("#status .atributo .editavel");
+    db.ref(`fichas/${personagemId}/status`).update({
+      AGI: a[0].textContent,
+      FOR: a[1].textContent,
+      VIG: a[2].textContent,
+      PRE: a[3].textContent,
+      INT: a[4].textContent
+    });
+  }, 300);
+}
+
+let descTimer;
+function salvarDescricao() {
+  if (carregandoFicha) return;
+
+  clearTimeout(descTimer);
+  descTimer = setTimeout(() => {
+    db.ref(`fichas/${personagemId}/descricao`)
+      .set(document.getElementById("descricao-texto").innerHTML);
+  }, 500);
+}
+
+let combateTimer;
+function salvarCombate() {
+  if (carregandoFicha) return;
+
+  clearTimeout(combateTimer);
+  combateTimer = setTimeout(() => {
+    db.ref(`fichas/${personagemId}/combate`)
+      .set(document.getElementById("combate-texto").innerHTML);
+  }, 400);
+}
+
+let listasTimer;
+function salvarListas() {
+  if (carregandoFicha) return;
+
+  clearTimeout(listasTimer);
+  listasTimer = setTimeout(() => {
+    const secoes = document.querySelectorAll("#status .secao .editavel");
+
+    db.ref(`fichas/${personagemId}/listas`).update({
+  pericias: textoParaLista(secoes[0].innerHTML),
+  sentidos: textoParaLista(secoes[1].innerHTML),
+  resistencias: textoParaLista(secoes[2].innerHTML),
+  vulnerabilidades: textoParaLista(secoes[3].innerHTML)
+});
+  }, 400);
+}
+
+let blocosTimer;
+function salvarBlocos() {
+  if (carregandoFicha) return;
+
+  clearTimeout(blocosTimer);
+  blocosTimer = setTimeout(() => {
+    const blocos = document.querySelectorAll(".bloco-duplo .editavel");
+
+    db.ref(`fichas/${personagemId}`).update({
+      defesa: blocos[0]?.textContent || "",
+      deslocamento: blocos[1]?.textContent || ""
+    });
+  }, 300);
+}
+
+
+function salvarFichaBase() {
+  if (carregandoFicha) return;
+
+  db.ref(`fichas/${personagemId}/base`).update({
+    imgSrc,
+    imgDescricao
+  });
+}
+  
 
 function carregarFicha() {
   carregandoFicha = true;
@@ -1037,41 +1066,67 @@ function carregarFicha() {
 
     const dados = snapshot.val();
 
-    if (dados.imgSrc) document.getElementById("preview-imagem").src = dados.imgSrc;
-    if (dados.imgDescricao) {
-  document.getElementById("preview-imagem-descricao").src = dados.imgDescricao;
+if (dados.base?.imgSrc) {
+  imgSrc = dados.base.imgSrc;
+  document.getElementById("preview-imagem").src = imgSrc;
 }
 
-    if (dados.nome) document.querySelector(".info-topo .nome").textContent = dados.nome;
-    if (dados.vd) document.querySelector(".info-topo .vd").textContent = dados.vd;
-    if (dados.livre)
-      document.querySelectorAll(".info-topo .editavel")[2].textContent = dados.livre;
+if (dados.base?.imgDescricao) {
+  imgDescricao = dados.base.imgDescricao;
+  document.getElementById("preview-imagem-descricao").src = imgDescricao;
+}
+
+
+
+    if (dados.topo) {
+  if (dados.topo.nome)
+    document.querySelector(".info-topo .nome").textContent = dados.topo.nome;
+  if (dados.topo.vd)
+    document.querySelector(".info-topo .vd").textContent = dados.topo.vd;
+  if (dados.topo.livre)
+    document.querySelectorAll(".info-topo .editavel")[2].textContent = dados.topo.livre;
+}
+
 
     const atributosElems = document.querySelectorAll("#status .atributo .editavel");
-    if (dados.atributos) {
-      atributosElems[0].textContent = dados.atributos.AGI || "";
-      atributosElems[1].textContent = dados.atributos.FOR || "";
-      atributosElems[2].textContent = dados.atributos.VIG || "";
-      atributosElems[3].textContent = dados.atributos.PRE || "";
-      atributosElems[4].textContent = dados.atributos.INT || "";
-    }
+    if (dados.status) {
+  atributosElems[0].textContent = dados.status.AGI || "";
+  atributosElems[1].textContent = dados.status.FOR || "";
+  atributosElems[2].textContent = dados.status.VIG || "";
+  atributosElems[3].textContent = dados.status.PRE || "";
+  atributosElems[4].textContent = dados.status.INT || "";
+}
+
 
     const blocos = document.querySelectorAll(".bloco-duplo > div");
     if (dados.defesa) blocos[0].querySelector(".editavel").textContent = dados.defesa;
     if (dados.deslocamento) blocos[1].querySelector(".editavel").textContent = dados.deslocamento;
 
     const secoes = document.querySelectorAll("#status .secao .editavel");
-    secoes[0].innerHTML = listaParaTexto(dados.pericias);
-secoes[1].innerHTML = listaParaTexto(dados.sentidos);
-secoes[2].innerHTML = listaParaTexto(dados.resistencias);
-secoes[3].innerHTML = listaParaTexto(dados.vulnerabilidades);
 
-    if (dados.combateTexto) {
-  document.getElementById("combate-texto").innerHTML = dados.combateTexto;
+if (dados.listas) {
+  secoes[0].innerHTML = listaParaTexto(dados.listas.pericias);
+  secoes[1].innerHTML = listaParaTexto(dados.listas.sentidos);
+  secoes[2].innerHTML = listaParaTexto(dados.listas.resistencias);
+  secoes[3].innerHTML = listaParaTexto(dados.listas.vulnerabilidades);
+} else {
+  // compatibilidade com fichas antigas
+  secoes[0].innerHTML = listaParaTexto(dados.pericias);
+  secoes[1].innerHTML = listaParaTexto(dados.sentidos);
+  secoes[2].innerHTML = listaParaTexto(dados.resistencias);
+  secoes[3].innerHTML = listaParaTexto(dados.vulnerabilidades);
 }
-if (dados.descricaoTexto) {
-  document.getElementById("descricao-texto").innerHTML = dados.descricaoTexto;
+
+
+
+    if (dados.combate) {
+  document.getElementById("combate-texto").innerHTML = dados.combate;
 }
+
+if (dados.descricao) {
+  document.getElementById("descricao-texto").innerHTML = dados.descricao;
+}
+
     carregandoFicha = false;
   });
 }
@@ -1235,7 +1290,8 @@ function selecionarImagem() {
     const reader = new FileReader();
     reader.onload = () => {
       document.getElementById("preview-imagem").src = reader.result;
-      salvarFicha();
+      imgSrc = reader.result;
+salvarFichaBase();
     };
     reader.readAsDataURL(file);
   };
@@ -1251,7 +1307,9 @@ function selecionarImagemDescricao() {
     const reader = new FileReader();
     reader.onload = () => {
       document.getElementById("preview-imagem-descricao").src = reader.result;
-      salvarFicha();
+      imgDescricao = reader.result;
+salvarFichaBase();
+
     };
     reader.readAsDataURL(file);
   };
@@ -1261,48 +1319,11 @@ function selecionarImagemDescricao() {
 /* ==============================
    🔹 DRAG & DROP
 ============================== */
-function ativarDragNoCard(card, container) {
-  card.draggable = true;
 
-  card.addEventListener("dragstart", () => card.classList.add("arrastando"));
-  card.addEventListener("dragover", e => e.preventDefault());
-  card.addEventListener("drop", () => {
-    const arrastando = container.querySelector(".arrastando");
-    if (!arrastando || arrastando === card) return;
-    container.insertBefore(arrastando, card);
-  });
-
-  card.addEventListener("dragend", () => {
-    card.classList.remove("arrastando");
-
-    if (card.classList.contains("card-habilidade")) {
-      const tipo = container.id === "lista-habilidades-ativo" ? "ativo" : "normal";
-      salvarOrdemHabilidades(container, tipo);
-    }
-  });
-}
 
 /* ==============================
    🔹 MODAL HABILIDADES
 ============================== */
-function toggleDescricao(botao) {
-  // Encontra o card pai
-  const card = botao.closest('.card-item');
-  if (!card) return;
-
-  // Encontra a descrição dentro do card
-  const desc = card.querySelector('.item-desc');
-  if (!desc) return;
-
-  // Alterna entre mostrar/esconder
-  if (desc.style.display === 'none') {
-    desc.style.display = 'block';
-    botao.textContent = '▲'; // seta para cima
-  } else {
-    desc.style.display = 'none';
-    botao.textContent = '▼'; // seta para baixo
-  }
-}
 function ativarDragNoCard(card, container) {
   card.draggable = true;
 
@@ -1669,10 +1690,6 @@ if (!destino) return;
 destino.appendChild(card);
 ativarDragNoCard(card, destino);
 }
-document.addEventListener("DOMContentLoaded", () => {
-  carregarFicha();
-  carregarHabilidadesFirebase();
-});
 
 
 
@@ -1681,12 +1698,46 @@ document.addEventListener("DOMContentLoaded", () => {
    🔹 INICIAR
 ============================== */
 window.addEventListener("load", () => {
-  carregarFicha();
-  carregarBarras();
-  document.querySelectorAll(".editavel").forEach(el => {
-    el.addEventListener("input", salvarFicha);
-  });
-});
+carregarFicha();
 
+setTimeout(() => {
+  carregarBarras();
+  carregarHabilidadesFirebase();
+}, 50);
+
+
+  // TOPO
+document.querySelector(".info-topo .nome")
+  ?.addEventListener("input", salvarTopo);
+
+document.querySelector(".info-topo .vd")
+  ?.addEventListener("input", salvarTopo);
+
+document.querySelectorAll(".info-topo .editavel")[2]
+  ?.addEventListener("input", salvarTopo);
+
+// STATUS
+document.querySelectorAll("#status .atributo .editavel")
+  .forEach(el => el.addEventListener("input", salvarStatus));
+
+// DEFESA E DESLOCAMENTO
+document.querySelectorAll(".bloco-duplo .editavel")
+  .forEach(el => el.addEventListener("input", salvarBlocos));
+  
+
+// LISTAS (perícias, sentidos, resistências, vulnerabilidades)
+document.querySelectorAll("#status .secao .editavel")
+  .forEach(el => el.addEventListener("input", salvarListas));
+
+
+// DESCRIÇÃO
+document.getElementById("descricao-texto")
+  ?.addEventListener("input", salvarDescricao);
+
+// COMBATE
+document.getElementById("combate-texto")
+  ?.addEventListener("input", salvarCombate);
+
+  });
 </script>
 
