@@ -1058,6 +1058,7 @@ function salvarFichaBase() {
 }
   
 
+
 function carregarFicha() {
   carregandoFicha = true;
 
@@ -1692,12 +1693,47 @@ ativarDragNoCard(card, destino);
 }
 
 
+function criarFichaSeNaoExiste() {
+  const ref = db.ref(`fichas/${personagemId}`);
+  ref.get().then(snap => {
+    if (snap.exists()) return;
+
+    ref.set({
+      base: {
+        imgSrc: "",
+        imgDescricao: ""
+      },
+      topo: {
+        nome: "",
+        vd: "",
+        livre: ""
+      },
+      status: {
+        AGI: "",
+        FOR: "",
+        VIG: "",
+        PRE: "",
+        INT: ""
+      },
+      listas: {
+        pericias: [],
+        sentidos: [],
+        resistencias: [],
+        vulnerabilidades: []
+      },
+      combate: "",
+      descricao: ""
+    });
+  });
+}
 
 
 /* ==============================
    🔹 INICIAR
 ============================== */
 window.addEventListener("load", () => {
+
+ criarFichaSeNaoExiste(); // 🔥 ESSENCIAL
 carregarFicha();
 
 setTimeout(() => {
@@ -1740,4 +1776,3 @@ document.getElementById("combate-texto")
 
   });
 </script>
-
